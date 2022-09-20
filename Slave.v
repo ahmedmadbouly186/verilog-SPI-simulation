@@ -1,0 +1,69 @@
+
+module Slave(input reset,
+input [7:0]sDTSend,
+output [7:0]slaveDataReceived,
+input SCLK,
+input CS,
+input SDI,
+output SDO);
+
+reg [7:0]slaveDataToSend;
+integer c = 0;
+reg store;
+
+always @(negedge CS)
+begin
+slaveDataToSend = sDTSend;
+c=0;
+end
+
+
+assign SDO = store;
+assign slaveDataReceived = slaveDataToSend;
+
+
+///////   All CORRECT
+always @(reset)
+begin
+if(reset == 1)
+    begin
+        slaveDataToSend = 0;
+    end
+end
+
+
+
+
+always @(posedge SCLK)
+begin
+
+    if (CS == 0)
+    begin 
+        if(c < 8)     //actual shift and send data form slave 
+        begin
+            store = slaveDataToSend[0];
+            slaveDataToSend =  slaveDataToSend >> 1;
+            c = c + 1;
+        end
+        else 
+        begin 
+        store=1'bz;
+        end 
+        
+    end
+    else store=1'bz;
+       
+end
+always@(negedge SCLK)
+begin
+    if(CS == 0&c<=8)
+    begin
+        slaveDataToSend[7] = SDI;
+        if (c==8)c=c+1;
+    end
+end
+endmodule
+
+
+
+
